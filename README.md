@@ -5,6 +5,8 @@ The tool uses regular expression to identify comments in all formats (inline, mu
 Finally, the tool includes a built-in list of "interesting" keywords that will be highlighted if detected in a comment.
 The built-in list can be overriden with custom keywords by supplying a comma separated list to the input box and clicking extract. 
 
+![CommentDump Screenshot](https://github.com/PN-Tester/commentDump/blob/main/screenshot.PNG "Title")
+
 # Installation
 
 1. git clone https://github.com/PN-Tester/commentDump/
