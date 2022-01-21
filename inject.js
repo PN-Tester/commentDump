@@ -4,8 +4,6 @@
 */
 
 /*
-   TODO: Make keywords dynamic, connected to the extensions HTML box. 
-   TODO: Identify source of false positives still occuring in comment dumping and fix regex
    TODO: Silently handle 400 or other XHR errors i.e. dont print them to the console if the extension caused them, its confusing
 */
 
