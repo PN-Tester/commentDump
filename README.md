@@ -1,5 +1,5 @@
 # CommentDump V3
-This is a tool I developed to assist with web application penetration testing. The tool is a browser extension that works in chromium based browser (chrome, edge, opera, etc.)
+This is a tool I developed to assist with web application penetration testing. The tool is a browser extension that works in chromium based browsers (chrome, edge, opera, etc.)
 The tool allows the analyst to rapidly browse through all comments from the current page and loaded ressource files by isolating them and dumping the output to the developper console.
 The tool uses regular expression to identify comments in all formats (inline, multi-line, etc.) and provides the location of the source file for easy reference.
 Finally, the tool includes a built-in list of "interesting" keywords that will be highlighted if detected in a comment.
