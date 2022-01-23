@@ -3,7 +3,7 @@ This is a tool I developed to assist with web application penetration testing. T
 The tool allows the analyst to rapidly browse through all comments from the current page and loaded resource files by isolating them and dumping the output to the developer console.
 The tool uses regular expression to identify comments in all formats (inline, multi-line, etc.) and provides the location of the source file for easy reference.
 Finally, the tool includes a built-in list of "interesting" keywords that will be highlighted if detected in a comment.
-The built-in list can be overriden with custom keywords by supplying a comma separated list to the input box and clicking extract. 
+The built-in list can be overridden with custom keywords by supplying a comma separated list to the input box and clicking extract. 
 
 ![CommentDump Screenshot](https://github.com/PN-Tester/commentDump/blob/main/screenshot.PNG "Title")
 
