@@ -4,7 +4,7 @@ Comments can contain hardcoded credentials, references to internal systems and i
 It can be rather time consuming to go through all the sources of a web application manually, and it may be more difficult to detect
 patterns when analysis is spread out over multiple pages. This tool exists to allow analysts to quickly profile 
 a web application's comments with just 1 click. Based on the content and verbosity of the comments, analysts can quickly determine if the target
-application is more likely to contain addtional vulnerabilities. In some scenarios, the tool may identify information disclosure vulnerabilities without further effort.
+application is more likely to contain additional vulnerabilities. In some scenarios, the tool may identify information disclosure vulnerabilities without further effort.
 Finally, the ability to identify interesting keywords was added to assist testers with rapid identification of potential attack vectors during initial content discovery phase.
 
 This tool will have additonal functionality added periodically
