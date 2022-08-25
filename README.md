@@ -19,7 +19,7 @@ The built-in list can be overridden with custom keywords by supplying a comma se
 1. Open developer tools window and navigate to "console". This is where output from the extension goes.
 2. Click the extension icon to open extension pop-up
 3. Optionally, enter a comma separated list of keywords to detect in the box labelled "Enter Keywords". Leaving this blank will use default list.
-4. Click "extract". Console window is automatically cleared and before results appear.
+4. Click "extract". Console window is automatically cleared before results appear.
 
 # Rationale
 Over many years of penetration testing web applications, I have noticed that comments are likely to contain sensitive information. 
