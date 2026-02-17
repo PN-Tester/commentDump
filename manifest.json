@@ -3,11 +3,15 @@
 
   "name": "CommentDump",
   "description": "Dump all comments from current page and loaded resources into the console",
-  "version": "3.0",
+  "version": "4.0",
 
   "action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"
+  },
+
+  "background": {
+    "service_worker": "background.js"
   },
 
   "permissions": [
