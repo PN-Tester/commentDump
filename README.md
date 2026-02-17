@@ -6,10 +6,12 @@ patterns when analysis is spread out over multiple pages. This tool exists to al
 a web application's comments with just 1 click. Based on the content and verbosity of the comments, analysts can quickly determine if the target
 application is more likely to contain additional vulnerabilities. In some scenarios, the tool may identify information disclosure vulnerabilities without further effort.
 Finally, the ability to identify interesting keywords was added to assist testers with rapid identification of potential attack vectors during initial content discovery phase.
+In the latest version, the output is improved to filter XHR errors from the console and group together comments that belong to specific resource files, making tracking easier for large complex targets.
+There is also a summary section printed at the bottom now, for tracking comment and keyword hit tallies
 
 This tool will have additonal functionality added periodically
 
-# CommentDump V3
+# CommentDump V4
 This is a tool I developed to assist with web application penetration testing. The tool is a browser extension that works in chromium based browsers (chrome, edge, opera, etc.)
 The tool allows the analyst to rapidly browse through all comments from the current page and loaded resource files by isolating them and dumping the output to the developer console.
 The tool uses regular expression to identify comments in all formats (inline, multi-line, etc.) and provides the location of the source file for easy reference.
