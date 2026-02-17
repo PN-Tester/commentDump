@@ -5,14 +5,19 @@
 */
 
 document.addEventListener('DOMContentLoaded', function () {
-  const extractBtn  = document.getElementById('extractBtn');
-  const btnWrap     = document.getElementById('btnWrap');
+  const extractBtn    = document.getElementById('extractBtn');
+  const btnWrap       = document.getElementById('btnWrap');
   const keywordsInput = document.getElementById('keywords');
-  const statusEl    = document.getElementById('status');
-  const kwToggle    = document.getElementById('kwToggle');
-  const kwSection   = document.getElementById('kwSection');
-  const kwArrow     = document.getElementById('kwArrow');
-  const kwLabel     = document.getElementById('kwLabel');
+  const statusEl      = document.getElementById('status');
+  const kwToggle      = document.getElementById('kwToggle');
+  const kwSection     = document.getElementById('kwSection');
+  const kwArrow       = document.getElementById('kwArrow');
+  const kwLabel       = document.getElementById('kwLabel');
+
+  const cbJS         = document.getElementById('cbJS');
+  const cbCSS        = document.getElementById('cbCSS');
+  const cbHTML       = document.getElementById('cbHTML');
+  const cbSameOrigin = document.getElementById('cbSameOrigin');
 
   /* ── Collapsible keywords toggle ── */
   kwToggle.addEventListener('click', function () {
@@ -22,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     kwLabel.classList.toggle('active', !isOpen);
   });
 
-  /* ── Expand if user already typed something (e.g. re-opened popup) ── */
   if (keywordsInput.value.trim().length > 0) {
     kwSection.classList.add('open');
     kwArrow.classList.add('open');
@@ -33,10 +37,17 @@ document.addEventListener('DOMContentLoaded', function () {
   extractBtn.addEventListener('click', function () {
     const keywords = keywordsInput.value.trim();
 
+    const options = {
+      parseJS:        cbJS.checked,
+      parseCSS:       cbCSS.checked,
+      parseHTML:      cbHTML.checked,
+      sameOriginOnly: cbSameOrigin.checked
+    };
+
     extractBtn.classList.remove('ready');
     extractBtn.classList.add('scanning');
-    extractBtn.textContent = 'SCANNING…';
-    statusEl.textContent = 'Injecting scanner…';
+    extractBtn.textContent = 'SCANNING\u2026';
+    statusEl.textContent = 'Injecting scanner\u2026';
     statusEl.className = 'status active';
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -58,17 +69,17 @@ document.addEventListener('DOMContentLoaded', function () {
           chrome.scripting.executeScript(
             {
               target: { tabId },
-              func: function (kw) {
-                if (typeof window.__cdRun === 'function') window.__cdRun(kw);
+              func: function (kw, opts) {
+                if (typeof window.__cdRun === 'function') window.__cdRun(kw, opts);
               },
-              args: [keywords]
+              args: [keywords, options]
             },
             function () {
               if (chrome.runtime.lastError) {
                 showError(chrome.runtime.lastError.message);
                 return;
               }
-              showSuccess('Scan started — check DevTools (F12)');
+              showSuccess('Scan started \u2014 check DevTools (F12)');
             }
           );
         }
