@@ -1,296 +1,346 @@
-<!DOCTYPE HTML>
-<html>
-  <head>
-    <Title>CommentDump</Title>
-    <script src="popup.js"></script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300&display=swap');
-      {
-      margin:0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Roboto Mono', monospace;
-      }
-      p{
-      color:white;
-      }
-      h1{
-      color:white;
-      }
-      body {
-      width:100%;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CommentDump</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cyan:    #2bd2ff;
+      --green:   #1eff45;
+      --red:     #ff4444;
+      --bg:      #0d0f1f;
+      --surface: #151728;
+      --border:  #252848;
+      --text:    #e2e8f8;
+      --muted:   #6b72a0;
+      --glow-c:  rgba(43, 210, 255, 0.6);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 280px;
+      background: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Subtle scanline */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
       position: relative;
-      display:block;
-      justify-content:center;
-      align-items:center;
-      background: #00000050;
-      }
-      .container
-      {
-      display:block;
-      flex-wrap:wrap;
-      justify-content:space-around;
-      }
-      .container .btn {
-      position:relative;
-      width: 155px;
-      height: 55px;
-      margin:20px;
-      }
-      .container .btn button
-      {
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      background: rgba(255,255,255,0.05);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-      border-top: 1px solid rgba(255,255,255,0.1);
-      border-bottom:1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      animation: glow-line 3s ease-in-out infinite;
+    }
+
+    @keyframes glow-line {
+      0%, 100% { opacity: 0.4; transform: scaleX(0.4); }
+      50%       { opacity: 1;   transform: scaleX(1); }
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--cyan);
+      letter-spacing: 4px;
+      text-shadow: 0 0 12px var(--glow-c), 0 0 24px rgba(43,210,255,0.25);
+    }
+
+    .tagline {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    /* ── Body ── */
+    .body { padding: 16px; }
+
+    /* ── THE BUTTON (neon style like V2 original) ── */
+    .btn-wrap {
+      position: relative;
+      width: 100%;
+      height: 52px;
+      margin-bottom: 14px;
+    }
+
+    .extract-btn {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-top: 1px solid rgba(255,255,255,0.18);
       border-radius: 30px;
       color: #fff;
-      z-index: 1;
-      font-size: 400;
-      font-weight: 300;
-      letter-spacing: 1px;
-      text-decoration: none;
-      overflow: hidden;
-      transition: 0.5s;
-      backdrop-filter: blur(15px);
-      }
-      .container .btn:hover button
-      {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
       letter-spacing: 3px;
-      }
-      .container .btn button::before
-      {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 50%;
-      height: 100%;
-      background: linear-gradient(to left, rgba(255,255,255,0.15),
-      transparent);
-      transform: skewX(45deg) translateX(0);
-      transition: 0.5s;
-      }
-      .container .btn:hover button::before
-      {
-      transform: skewX(45deg) translateX(200%);
-      }
-      .container .btn::before
-      {
-      content: '';
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: -5px;
-      width:30px;
-      height:10px;
-      background: #f00;
-      border-radius: 10px;
-      transition: 0.5s;
-      transition-delay: 0s;
-      }
-      .container .btn:hover::before
-      {
-      bottom: 0;
-      height: 50%;
-      width: 80%;
-      border-radius: 30px;
-      transition-delay: 0.5s;
-      }
-      .container .btn::after
-      {
-      content: '';
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: -5px;
-      width:30px;
-      height:10px;
-      background: #f00;
-      border-radius: 10px;
-      transition: 0.5s;
-      transition-delay: 0s;
-      }
-      .container .btn:hover::after
-      {
-      top: 0;
-      height: 50%;
-      width: 80%;
-      border-radius: 30px;
-      transition-delay: 0.5s;
-      }
-      .container .btn:nth-child(1)::before,
-      .container .btn:nth-child(1)::after
-      {
-      background: #2bd2ff;
-      box-shadow: 0 0 5px #2bd2ff,
-      0 0 15px #2bd2ff,
-      0 0 30px #2bd2ff,
-      0 0 60px #2bd2ff;
-      }
-      .container .btn:nth-child(2)::before,
-      .container .btn:nth-child(2)::after
-      {
-      background: #2bd2ff;
-      box-shadow: 0 0 5px #2bd2ff,
-      0 0 15px #2bd2ff,
-      0 0 30px #2bd2ff,
-      0 0 60px #2bd2ff;
-      }
-      .container .btn:nth-child(3)::before,
-      .container .btn:nth-child(3)::after
-      {
-      background: #1eff45;
-      box-shadow: 0 0 5px #1eff45,
-      0 0 15px #1eff45,
-      0 0 30px #1eff45,
-      0 0 60px #1eff45;
-      }		
-      /* BEGIN INPUT BOX CSS */
-      h1 {
-      font-size: 28px;
-      margin-bottom: 2.5%;
-      }
-      input,
-      span,
-      label,
-      textarea {
-      font-family: 'Ubuntu', sans-serif;
-      display: block;
-      margin: 10px;
-      padding: 5px;
-      border: none;
-      font-size: 22px;
-      }
-      textarea:focus,
-      input:focus {
-      outline: 0;
-      }
-      /* Question */
-      input.question,
-      textarea.question {
-      font-size: 37px;
-      color:white;
-      font-weight: 300;
-      border-radius: 2px;
-      /*margin: 0;*/
-      border: none;
-      width: 80%;
-      background: rgba(0, 0, 0, 0.1);
-      transition: padding-top 0.2s ease, margin-top 0.2s ease;
-      overflow-x: hidden; /* Hack to make "rows" attribute apply in Firefox. */
-      }
-      /* Underline and Placeholder */
-      input.question + label,
-      textarea.question + label {
-      display: block;
-      position: relative;
-      white-space: nowrap;
-      padding: 0;
-      margin: 10px;
-      width: 10%;
-      border-top: 1px solid #2bd2ff;
-      -webkit-transition: width 0.4s ease;
-      transition: width 0.4s ease;
-      height: 0px;
-      }
-      input.question:focus + label,
-      textarea.question:focus + label {
-      width: 80%;
-      }
-      input.question:focus,
-      input.question:valid {
-      padding-top: 35px;
-      }
-      textarea.question:valid,
-      textarea.question:focus {
-      margin-top: 35px;
-      }
-      input.question:focus + label > span,
-      input.question:valid + label > span {
-      top: -100px;
-      font-size: 22px;
-      color: #efefef;
-      }
-      textarea.question:focus + label > span,
-      textarea.question:valid + label > span {
-      top: -150px;
-      font-size: 22px;
-      color: #333;
-      }
-      input.question:valid + label,
-      textarea.question:valid + label {
-      border-color: #2bd2ff;
-      }
-      input.question:invalid,
-      textarea.question:invalid {
-      box-shadow: none;
-      }
-      input.question + label > span,
-      textarea.question + label > span {
-      font-weight: 300;
-      margin: 0;
-      position: absolute;
-      color: #8F8F8F;
-      top: -66px;
-      z-index: -1;
-      -webkit-transition: top 0.2s ease, font-size 0.2s ease, color 0.2s ease;
-      transition: top 0.2s ease, font-size 0.2s ease, color 0.2s ease;
-      }
-      input[type="submit"] {
-      -webkit-transition: opacity 0.2s ease, background 0.2s ease;
-      transition: opacity 0.2s ease, background 0.2s ease;
-      display: block;
-      opacity: 0;
-      margin: 10px 0 0 0;
-      padding: 10px;
       cursor: pointer;
-      }
-      input[type="submit"]:hover {
-      background: #EEE;
-      }
-      input[type="submit"]:active {
-      background: #999;
-      }
-      input.question:valid ~ input[type="submit"], textarea.question:valid ~ input[type="submit"] {
-      -webkit-animation: appear 1s forwards;
-      animation: appear 1s forwards;
-      }
-      input.question:invalid ~ input[type="submit"], textarea.question:invalid ~ input[type="submit"] {
-      display: none;
-      }
-      @-webkit-keyframes appear {
-      100% {
+      overflow: hidden;
+      z-index: 1;
+      transition: letter-spacing 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* shimmer sweep on idle */
+    .extract-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 50%; height: 100%;
+      background: linear-gradient(to left, rgba(255,255,255,0.12), transparent);
+      transform: skewX(45deg) translateX(0);
+      transition: transform 0.5s ease;
+    }
+
+    .extract-btn.ready:hover {
+      letter-spacing: 5px;
+    }
+
+    .extract-btn.ready:hover::after {
+      transform: skewX(45deg) translateX(220%);
+    }
+
+    /* top & bottom neon bars — cyan by default, matching original V2 style */
+    .btn-wrap::before,
+    .btn-wrap::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 8px;
+      background: var(--cyan);
+      border-radius: 10px;
+      transition: width 0.5s ease, height 0.5s ease, border-radius 0.5s ease;
+      transition-delay: 0s;
+    }
+
+    .btn-wrap::before { bottom: -4px; z-index: 0; }
+    .btn-wrap::after  { top: -4px;    z-index: 0; }
+
+    .btn-wrap:hover::before,
+    .btn-wrap:hover::after {
+      width: 82%;
+      height: 45%;
+      border-radius: 30px;
+      transition-delay: 0.3s;
+    }
+
+    /* Neon glow — tighter spread so it stays tucked behind the button */
+    .btn-wrap::before,
+    .btn-wrap::after {
+      box-shadow:
+        0 0 4px var(--cyan),
+        0 0 10px var(--cyan),
+        0 0 20px var(--cyan);
+    }
+
+    /* scanning state */
+    .extract-btn.scanning {
+      animation: pulse-btn 0.8s ease-in-out infinite;
+      letter-spacing: 4px;
+    }
+
+    @keyframes pulse-btn {
+      0%, 100% { box-shadow: inset 0 0 8px rgba(43,210,255,0.1); }
+      50%       { box-shadow: inset 0 0 20px rgba(43,210,255,0.25); }
+    }
+
+    /* done / error states */
+    .btn-wrap.done::before,
+    .btn-wrap.done::after {
+      background: var(--green);
+      box-shadow: 0 0 4px var(--green), 0 0 10px var(--green), 0 0 20px var(--green);
+    }
+
+    .btn-wrap.error::before,
+    .btn-wrap.error::after {
+      background: var(--red);
+      box-shadow: 0 0 4px var(--red), 0 0 10px var(--red), 0 0 20px var(--red);
+    }
+
+    .extract-btn.done  { color: var(--green); }
+    .extract-btn.error { color: var(--red); }
+
+    /* ── Keywords collapsible ── */
+    .kw-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-bottom: 0;
+      padding: 5px 0;
+    }
+
+    .kw-toggle-label {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .kw-toggle-arrow {
+      font-size: 9px;
+      color: var(--muted);
+      transition: transform 0.25s ease, color 0.2s;
+      margin-left: auto;
+    }
+
+    .kw-toggle:hover .kw-toggle-label,
+    .kw-toggle:hover .kw-toggle-arrow {
+      color: var(--cyan);
+    }
+
+    .kw-toggle-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+
+    .kw-toggle:hover .kw-toggle-line { background: var(--cyan); }
+
+    .kw-section {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+      opacity: 0;
+    }
+
+    .kw-section.open {
+      max-height: 60px;
       opacity: 1;
-      }
-      }
-      @keyframes appear {
-      100% {
-      opacity: 1;
-      }
-      }
-    </style>
-  </head>
-  <body>
-    <h1>CommentDump</h1>
-    <div class="container">
-      <div class="btn"><button id="checkPage">EXTRACT</button></div>
+    }
+
+    .kw-toggle-arrow.open { transform: rotate(90deg); color: var(--cyan); }
+    .kw-toggle-label.active { color: var(--cyan); }
+
+    .input-wrap {
+      position: relative;
+      margin-top: 8px;
+      margin-bottom: 14px;
+    }
+
+    .input-wrap::before {
+      content: '>';
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    input#keywords {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px 8px 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input#keywords::placeholder {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    input#keywords:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px rgba(43,210,255,0.1), 0 0 10px rgba(43,210,255,0.06);
+    }
+
+    /* ── Status ── */
+    .status {
+      font-size: 10px;
+      color: var(--muted);
+      min-height: 14px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      transition: color 0.3s;
+    }
+
+    .status.active  { color: var(--cyan); }
+    .status.success { color: var(--green); }
+    .status.error   { color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">COMMENTDUMP</div>
+    <div class="tagline">page comment extractor</div>
+  </div>
+
+  <div class="body">
+
+    <!-- Neon button wrapper -->
+    <div class="btn-wrap" id="btnWrap">
+      <button class="extract-btn ready" id="extractBtn">EXTRACT</button>
     </div>
-    <form>
-    <input type="text" name="name" class="question" id="keywords" required autocomplete="off" />
-    <label for="keywords"><span>Custom Keywords</span></label>
-    </span>
+
+    <div class="status" id="status">Open DevTools console (F12) to see results</div>
+
+    <!-- Collapsible keywords section -->
+    <div class="kw-toggle" id="kwToggle">
+      <span class="kw-toggle-label" id="kwLabel">Custom Keywords</span>
+      <div class="kw-toggle-line"></div>
+      <span class="kw-toggle-arrow" id="kwArrow">&#9654;</span>
     </div>
+
+    <div class="kw-section" id="kwSection">
+      <div class="input-wrap">
+        <input
+          type="text"
+          id="keywords"
+          placeholder="password, secret, api_key"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
     </div>
-    </div>
-    </div> 
-  </body>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
 </html>
