@@ -1,15 +1,21 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
 
   "name": "CommentDump",
-  "description": "Dump all comments from current page and loaded resources into console",
-  "version": "1.0",
+  "description": "Dump all comments from current page and loaded resources into the console",
+  "version": "3.0",
 
-  "browser_action": {
-   "default_icon": "icon.png",
-   "default_popup": "popup.html"
+  "action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
   },
+
   "permissions": [
-   "activeTab"
-   ]
+    "activeTab",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ]
 }
