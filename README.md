@@ -1,3 +1,11 @@
+**TLDR**
+- Dump all comments from target app
+- Control over what resources gets parsed (JS, CSS, HTML, same-origine)
+- Group results together per resource location
+- Alert on detection of interesting keywords (password, secret, api-key, etc.)
+- Group Alerts together
+- Ability to customize keyword detections
+
 # Rationale
 Over many years of penetration testing web applications, I have noticed that comments are likely to contain sensitive information. 
 Comments can contain hardcoded credentials, references to internal systems and identifiers, references to sensitive or deprecated functionality, information about the developpers, etc.
@@ -18,7 +26,7 @@ The tool uses regular expression to identify comments in all formats (inline, mu
 Finally, the tool includes a built-in list of "interesting" keywords that will be highlighted if detected in a comment.
 The built-in list can be overridden with custom keywords by supplying a comma separated list to the input box and clicking extract. 
 
-![CommentDump Screenshot](https://github.com/PN-Tester/commentDump/blob/main/screenshot.PNG "Title")
+![CommentDump Screenshot](https://github.com/PN-Tester/commentDump/blob/main/CommentDumpDemo.gif "Title")
 
 # Installation
 
