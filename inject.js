@@ -3,11 +3,17 @@
     inject.js
 
     By : Pierre-Nicolas Allard-Coutu (PN-Tester)
-    Ported to Manifest V3, improved UI and Output , silently handles xhr errors like 400/404 etc
-
+    Ported to Manifest V3, improved UI and Output
 */
 
-window.__cdRun = function (customKeywords) {
+window.__cdRun = function (customKeywords, options) {
+
+  /* ─── OPTIONS (from popup checkboxes) ────────────────────────────────── */
+
+  var parseJS       = !options || options.parseJS       !== false;
+  var parseCSS      = !options || options.parseCSS      !== false;
+  var parseHTML     = !options || options.parseHTML     !== false;
+  var sameOriginOnly = !options || options.sameOriginOnly !== false;
 
   /* ─── REGEXES ─────────────────────────────────────────────────────────── */
 
@@ -17,6 +23,14 @@ window.__cdRun = function (customKeywords) {
 
   const reSkipFiles = /\.(?:jpg|jpeg|png|gif|ico|gz|svg|woff2?|ttf|tif|mp4|webp|bmp|mp3|wav|ogg|pdf|zip|tar|bin|exe)(\?|#|$)/i;
 
+  // Library noise filter: skip anything with these framework names or that is minified
+  const reSkipLibraries = /(angular|moment|bootstrap|jquery|lodash|rxjs|zone\.js|core-js|polyfill|vendor|runtime|hammer|chart\.js|d3\.min|three\.min)|(\.min\.js(\?|#|$))/i;
+
+  // File type detectors (applied to the filename portion of the URL)
+  const reIsJS   = /\.m?js(\?|#|$)/i;
+  const reIsCSS  = /\.css(\?|#|$)/i;
+  const reIsHTML = /\.html?(\?|#|$)/i;
+
   const reValidURL = /^https?:\/\/.+/;
 
   const reBinarySignature = /^(JFIF|RIFF|WOF2|2EXIF|PNG|EXIF)/i;
@@ -24,7 +38,7 @@ window.__cdRun = function (customKeywords) {
   /* ─── KEYWORD SETUP ───────────────────────────────────────────────────── */
 
   let reKeywords;
-  let keywordList = []; // individual terms for matching which keyword triggered
+  let keywordList = [];
 
   if (customKeywords && customKeywords.trim().length > 0) {
     keywordList = customKeywords.trim()
@@ -47,7 +61,6 @@ window.__cdRun = function (customKeywords) {
 
   /* ─── HELPERS ─────────────────────────────────────────────────────────── */
 
-  // Find which specific keyword(s) matched in a comment
   function findMatchedKeywords(comment) {
     if (keywordList.length > 0) {
       var hits = keywordList.filter(function(k) {
@@ -55,19 +68,22 @@ window.__cdRun = function (customKeywords) {
       });
       return hits.length > 0 ? hits.join(', ') : 'keyword match';
     }
-    // For default list, extract the actual word that matched
     var m = comment.match(reDefaultKeywords);
     return m ? m[0].toUpperCase() : 'keyword match';
   }
 
-  function removeDuplicates(arr) {
-    return arr.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  // Returns true if a URL's file type is enabled by the current options
+  function isFileTypeEnabled(url) {
+    var fname = url.split('/').pop();
+    if (reIsJS.test(fname))   return parseJS;
+    if (reIsCSS.test(fname))  return parseCSS;
+    if (reIsHTML.test(fname)) return parseHTML;
+    // No recognisable extension — treat as JS-like (e.g. Angular route chunks with no ext)
+    return parseJS;
   }
 
   /* ─── CONSOLE WRAPPER ─────────────────────────────────────────────────── */
-  // All output is routed through this single object so every log call
-  // originates from the same source line — suppressing the per-call
-  // inject.js line numbers that would otherwise appear in the console gutter.
+
   var out = {
     log:            function() { console.log.apply(console, arguments); },
     group:          function() { console.group.apply(console, arguments); },
@@ -76,15 +92,15 @@ window.__cdRun = function (customKeywords) {
     clear:          function() { console.clear(); }
   };
 
-  /* ─── STORAGE: collect everything before printing ─────────────────────── */
-  // We two-pass: first gather all results, then print hits up top, then grouped
+  /* ─── STORAGE ─────────────────────────────────────────────────────────── */
 
-  var allKeywordHits = []; // { comment, source, matchedKw }
-  var allSources     = []; // { label, url, comments: [{comment,isHit}] }
+  var allKeywordHits  = [];
+  var allSources      = [];
 
   /* ─── COUNTERS ────────────────────────────────────────────────────────── */
-  var totalComments      = 0;
-  var totalKeywordHits   = 0;
+
+  var totalComments       = 0;
+  var totalKeywordHits    = 0;
   var sourcesWithComments = 0;
 
   /* ─── PRINT FUNCTIONS ─────────────────────────────────────────────────── */
@@ -98,22 +114,24 @@ window.__cdRun = function (customKeywords) {
     );
 
     allKeywordHits.forEach(function(hit) {
-      out.log(
-        '%c KEYWORD: ' + hit.matchedKw,
-        'color:#ff6666; font-weight:bold; font-size:11px;'
-      );
+      out.log('%c KEYWORD: ' + hit.matchedKw, 'color:#ff6666; font-weight:bold; font-size:11px;');
       if (hit.source) {
         out.log('%c Location: ' + hit.source, 'color:#aa4444; font-size:10px;');
       }
       out.log('%c' + hit.comment.trim(), 'color:#ff7070; font-family:monospace; font-size:11px;');
-      out.log(' '); // spacer
+      out.log(' ');
     });
 
     out.groupEnd();
   }
 
   function printSourceSection(src) {
-    var label = src.label
+    var tagParts = [src.label];
+    if (src.fromDOM)  tagParts.push('DOM');
+    if (src.fromPerf) tagParts.push('PERF');
+    if (src.cached)   tagParts.push('CACHED');
+
+    var label = tagParts.join(' · ')
       + '  [' + src.comments.length + ' comment'
       + (src.comments.length !== 1 ? 's' : '') + ']';
 
@@ -125,7 +143,6 @@ window.__cdRun = function (customKeywords) {
 
     src.comments.forEach(function(item) {
       if (item.isHit) {
-        // Already shown above — mark it lightly so user knows
         out.log('%c[keyword hit — see above]', 'color:#664444; font-size:10px; font-style:italic;');
       } else {
         out.log('%c' + item.comment.trim(), 'color:#8ea4a5; font-family:monospace; font-size:11px;');
@@ -136,10 +153,8 @@ window.__cdRun = function (customKeywords) {
   }
 
   function printAll() {
-    // 1. Keyword hits section — always at the top, always visible
     printKeywordHitsSection();
 
-    // 2. Per-source collapsed groups
     allSources.forEach(function(src) {
       if (src.comments.length > 0) {
         printSourceSection(src);
@@ -147,7 +162,6 @@ window.__cdRun = function (customKeywords) {
       }
     });
 
-    // 3. Summary
     var hitStyle = totalKeywordHits > 0
       ? 'background:#3a0000; color:#ff5555; font-weight:bold;'
       : 'background:#001a00; color:#1eff45; font-weight:bold;';
@@ -161,24 +175,25 @@ window.__cdRun = function (customKeywords) {
 
   /* ─── PROCESS COMMENTS from one source ───────────────────────────────── */
 
-  function processComments(comments, sourceURL, sourceLabel) {
+  function processComments(comments, sourceURL, sourceLabel, meta) {
     if (!comments || comments.length === 0) return;
 
-    var srcEntry = { label: sourceLabel, url: sourceURL, comments: [] };
+    var srcEntry = {
+      label:    sourceLabel,
+      url:      sourceURL,
+      comments: [],
+      fromDOM:  (meta && meta.fromDOM)  || false,
+      fromPerf: (meta && meta.fromPerf) || false,
+      cached:   (meta && meta.cached)   || false
+    };
 
     comments.forEach(function(c) {
       var isHit = reKeywords.test(c);
       totalComments++;
-
       srcEntry.comments.push({ comment: c, isHit: isHit });
-
       if (isHit) {
         totalKeywordHits++;
-        allKeywordHits.push({
-          comment:   c,
-          source:    sourceURL,
-          matchedKw: findMatchedKeywords(c),
-        });
+        allKeywordHits.push({ comment: c, source: sourceURL, matchedKw: findMatchedKeywords(c) });
       }
     });
 
@@ -194,59 +209,111 @@ window.__cdRun = function (customKeywords) {
   );
   var kwDisplay = (customKeywords && customKeywords.trim()) ? customKeywords.trim() : 'default list';
   out.log('%c Keywords: ' + kwDisplay, 'color:#888; font-size:11px; font-style:italic;');
+  out.log(
+    '%c Filters: JS=' + parseJS + '  CSS=' + parseCSS + '  HTML=' + parseHTML + '  same-origin=' + sameOriginOnly,
+    'color:#666; font-size:10px; font-style:italic;'
+  );
 
   /* ─── 1. INLINE PAGE SOURCE ───────────────────────────────────────────── */
 
-  var pageSource;
-  try {
-    pageSource = new XMLSerializer().serializeToString(document);
-  } catch (e) {
-    pageSource = document.documentElement.outerHTML;
-  }
+  // The inline page source is always scanned when parseHTML is enabled
+  if (parseHTML) {
+    var pageSource;
+    try {
+      pageSource = new XMLSerializer().serializeToString(document);
+    } catch (e) {
+      pageSource = document.documentElement.outerHTML;
+    }
 
-  var pageComments = pageSource.match(reComments);
-  if (pageComments && pageComments.length > 0) {
-    processComments(pageComments, null, 'Inline page source');
-  } else {
-    allSources.push({ label: 'Inline page source', url: null, comments: [] });
+    var pageComments = pageSource.match(reComments);
+    if (pageComments && pageComments.length > 0) {
+      processComments(pageComments, null, 'Inline page source');
+    } else {
+      allSources.push({ label: 'Inline page source', url: null, comments: [], fromDOM: false, fromPerf: false, cached: false });
+    }
   }
 
   /* ─── 2. COLLECT EXTERNAL RESOURCE URLS ──────────────────────────────── */
 
-  // Use PerformanceResourceTiming to only include URLs that the browser
-  // actually loaded successfully. This is the key to suppressing 4xx/5xx
-  // console errors — we never re-request something that already failed.
-  //
-  // Filters applied:
-  //   - transferSize > 0   : resource was fetched over the network (not blocked/failed)
-  //                          a 404/400 results in transferSize === 0 or a very small value
-  //                          with no decodedBodySize, so we check decodedBodySize too.
-  //   - responseStatus     : available in newer browsers; skip if not 200 when present.
-  //   - reValidURL         : must be an http(s) URL
-  //   - reSkipFiles        : skip binary file types
+  var urlMeta = {};
+  var pageOrigin = window.location.origin;
+
+  // --- 2a. PerformanceResourceTiming entries ---
 
   var perfEntries = window.performance.getEntriesByType('resource');
-  var allURLs = perfEntries
-    .filter(function(e) {
-      // responseStatus is available in Chrome 109+ / Firefox 109+
-      if (typeof e.responseStatus === 'number' && e.responseStatus !== 200) return false;
-      // decodedBodySize > 0 means the browser actually received a body
-      // transferSize > 0 means it wasn't a failed/blocked request
-      if (e.decodedBodySize === 0 && e.transferSize === 0) return false;
-      return reValidURL.test(e.name);
-    })
-    .map(function(e) { return e.name; });
+  perfEntries.forEach(function(e) {
+    if (!reValidURL.test(e.name)) return;
+    if (reSkipFiles.test(e.name)) return;
 
-  var sources = removeDuplicates(allURLs).filter(function(url) {
-    return !reSkipFiles.test(url);
+    // Skip known library/framework files and minified bundles
+    var fname = e.name.split('/').pop();
+    if (reSkipLibraries.test(fname)) return;
+
+    // Skip file types the user has disabled
+    if (!isFileTypeEnabled(e.name)) return;
+
+    // Same-origin filter
+    if (sameOriginOnly && !e.name.startsWith(pageOrigin)) return;
+
+    if (typeof e.responseStatus === 'number' && e.responseStatus !== 200) return;
+
+    var isScript = (e.initiatorType === 'script' || reIsJS.test(fname));
+    if (!isScript && e.decodedBodySize === 0 && e.transferSize === 0) return;
+
+    if (!urlMeta[e.name]) urlMeta[e.name] = { fromDOM: false, fromPerf: false, cached: false };
+    urlMeta[e.name].fromPerf = true;
+    if (e.transferSize === 0 && e.decodedBodySize === 0) urlMeta[e.name].cached = true;
   });
+
+  // --- 2b. DOM <script src> tags ---
+
+  if (parseJS) {
+    var domScriptEls = document.querySelectorAll('script[src]');
+    domScriptEls.forEach(function(el) {
+      var src = el.src;
+      if (!src || !reValidURL.test(src)) return;
+      if (reSkipFiles.test(src)) return;
+
+      var fname = src.split('/').pop();
+      if (reSkipLibraries.test(fname)) return;
+      if (sameOriginOnly && !src.startsWith(pageOrigin)) return;
+
+      if (!urlMeta[src]) urlMeta[src] = { fromDOM: false, fromPerf: false, cached: false };
+      urlMeta[src].fromDOM = true;
+    });
+  }
+
+  // --- 2c. DOM <link rel="stylesheet"> tags (for CSS) ---
+
+  if (parseCSS) {
+    var domLinkEls = document.querySelectorAll('link[rel="stylesheet"][href]');
+    domLinkEls.forEach(function(el) {
+      var href = el.href;
+      if (!href || !reValidURL.test(href)) return;
+      if (reSkipFiles.test(href)) return;
+
+      var fname = href.split('/').pop();
+      if (reSkipLibraries.test(fname)) return;
+      if (sameOriginOnly && !href.startsWith(pageOrigin)) return;
+
+      if (!urlMeta[href]) urlMeta[href] = { fromDOM: false, fromPerf: false, cached: false };
+      urlMeta[href].fromDOM = true;
+    });
+  }
+
+  var sources = Object.keys(urlMeta);
 
   if (sources.length === 0) {
     printAll();
     return;
   }
 
-  /* ─── 3. FETCH & PARSE RESOURCES ─────────────────────────────────────── */
+  out.log(
+    '%c Scanning ' + sources.length + ' resource(s)\u2026',
+    'color:#555e80; font-size:10px; font-style:italic;'
+  );
+
+  /* ─── 3. FETCH & PARSE RESOURCES (via background service worker) ──────── */
 
   var pending = sources.length;
 
@@ -255,36 +322,23 @@ window.__cdRun = function (customKeywords) {
     if (pending <= 0) printAll();
   }
 
-  // Use fetch() instead of XHR. Neither can fully silence browser network logs,
-  // but combined with the pre-filter above, we only request URLs already known
-  // to be good — so errors here should be extremely rare edge cases only.
   sources.forEach(function(url) {
-    var controller = new AbortController();
-    var timeoutId  = setTimeout(function() { controller.abort(); }, 3000);
+    var meta = urlMeta[url];
 
-    fetch(url, { signal: controller.signal, credentials: 'omit' })
-      .then(function(res) {
-        clearTimeout(timeoutId);
-        if (!res.ok) { onRequestDone(); return null; }
-        var finalURL = res.url || url;
-        return res.text().then(function(text) { return { text: text, url: finalURL }; });
-      })
-      .then(function(result) {
-        if (!result) { onRequestDone(); return; }
-        try {
-          if (reBinarySignature.test(result.text.substring(0, 20))) { onRequestDone(); return; }
-          var comments = result.text.match(reComments);
-          if (comments && comments.length > 0) {
-            var fname = result.url.split('/').pop().split('?')[0] || result.url;
-            processComments(comments, result.url, fname);
-          }
-        } catch (e) { /* binary/malformed — swallow silently */ }
-        onRequestDone();
-      })
-      .catch(function() {
-        clearTimeout(timeoutId);
-        onRequestDone();
-      });
+    chrome.runtime.sendMessage({ type: 'CD_FETCH', url: url }, function(response) {
+      if (chrome.runtime.lastError) { onRequestDone(); return; }
+      if (!response || !response.ok) { onRequestDone(); return; }
+      try {
+        if (reBinarySignature.test(response.text.substring(0, 20))) { onRequestDone(); return; }
+        var comments = response.text.match(reComments);
+        if (comments && comments.length > 0) {
+          var finalURL = response.finalURL || url;
+          var fname    = finalURL.split('/').pop().split('?')[0] || finalURL;
+          processComments(comments, finalURL, fname, meta);
+        }
+      } catch (e) { /* binary/malformed — swallow silently */ }
+      onRequestDone();
+    });
   });
 
 };
