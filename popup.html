@@ -85,7 +85,7 @@
     /* ── Body ── */
     .body { padding: 16px; }
 
-    /* ── THE BUTTON (neon style like V2 original) ── */
+    /* ── THE BUTTON ── */
     .btn-wrap {
       position: relative;
       width: 100%;
@@ -115,7 +115,6 @@
       transition: letter-spacing 0.3s ease, box-shadow 0.3s ease;
     }
 
-    /* shimmer sweep on idle */
     .extract-btn::after {
       content: '';
       position: absolute;
@@ -126,15 +125,9 @@
       transition: transform 0.5s ease;
     }
 
-    .extract-btn.ready:hover {
-      letter-spacing: 5px;
-    }
+    .extract-btn.ready:hover { letter-spacing: 5px; }
+    .extract-btn.ready:hover::after { transform: skewX(45deg) translateX(220%); }
 
-    .extract-btn.ready:hover::after {
-      transform: skewX(45deg) translateX(220%);
-    }
-
-    /* top & bottom neon bars — cyan by default, matching original V2 style */
     .btn-wrap::before,
     .btn-wrap::after {
       content: '';
@@ -147,6 +140,7 @@
       border-radius: 10px;
       transition: width 0.5s ease, height 0.5s ease, border-radius 0.5s ease;
       transition-delay: 0s;
+      box-shadow: 0 0 4px var(--cyan), 0 0 10px var(--cyan), 0 0 20px var(--cyan);
     }
 
     .btn-wrap::before { bottom: -4px; z-index: 0; }
@@ -160,16 +154,6 @@
       transition-delay: 0.3s;
     }
 
-    /* Neon glow — tighter spread so it stays tucked behind the button */
-    .btn-wrap::before,
-    .btn-wrap::after {
-      box-shadow:
-        0 0 4px var(--cyan),
-        0 0 10px var(--cyan),
-        0 0 20px var(--cyan);
-    }
-
-    /* scanning state */
     .extract-btn.scanning {
       animation: pulse-btn 0.8s ease-in-out infinite;
       letter-spacing: 4px;
@@ -180,21 +164,101 @@
       50%       { box-shadow: inset 0 0 20px rgba(43,210,255,0.25); }
     }
 
-    /* done / error states */
-    .btn-wrap.done::before,
-    .btn-wrap.done::after {
+    .btn-wrap.done::before, .btn-wrap.done::after {
       background: var(--green);
       box-shadow: 0 0 4px var(--green), 0 0 10px var(--green), 0 0 20px var(--green);
     }
-
-    .btn-wrap.error::before,
-    .btn-wrap.error::after {
+    .btn-wrap.error::before, .btn-wrap.error::after {
       background: var(--red);
       box-shadow: 0 0 4px var(--red), 0 0 10px var(--red), 0 0 20px var(--red);
     }
-
     .extract-btn.done  { color: var(--green); }
     .extract-btn.error { color: var(--red); }
+
+    /* ── Status ── */
+    .status {
+      font-size: 10px;
+      color: var(--muted);
+      min-height: 14px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      transition: color 0.3s;
+      margin-bottom: 12px;
+    }
+    .status.active  { color: var(--cyan); }
+    .status.success { color: var(--green); }
+    .status.error   { color: var(--red); }
+
+    /* ── Filter checkboxes row ── */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Hide the real checkbox */
+    .filter-row input[type="checkbox"] {
+      display: none;
+    }
+
+    /* Custom pill-style checkbox label */
+    .cb-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface);
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+
+    /* The little indicator square */
+    .cb-label::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border: 1px solid var(--muted);
+      border-radius: 1px;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+    }
+
+    /* Checked state — electric cyan */
+    input[type="checkbox"]:checked + .cb-label {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 6px rgba(43,210,255,0.2);
+    }
+
+    input[type="checkbox"]:checked + .cb-label::before {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      box-shadow: 0 0 4px var(--cyan), 0 0 8px rgba(43,210,255,0.5);
+    }
+
+    .cb-label:hover {
+      color: var(--cyan);
+      border-color: rgba(43,210,255,0.4);
+    }
+
+    /* Divider between file-type checkboxes and the same-origin toggle */
+    .filter-divider {
+      width: 1px;
+      height: 16px;
+      background: var(--border);
+      flex-shrink: 0;
+      margin: 0 2px;
+    }
 
     /* ── Keywords collapsible ── */
     .kw-toggle {
@@ -202,7 +266,6 @@
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      margin-bottom: 0;
       padding: 5px 0;
     }
 
@@ -221,11 +284,6 @@
       margin-left: auto;
     }
 
-    .kw-toggle:hover .kw-toggle-label,
-    .kw-toggle:hover .kw-toggle-arrow {
-      color: var(--cyan);
-    }
-
     .kw-toggle-line {
       flex: 1;
       height: 1px;
@@ -233,7 +291,9 @@
       transition: background 0.2s;
     }
 
-    .kw-toggle:hover .kw-toggle-line { background: var(--cyan); }
+    .kw-toggle:hover .kw-toggle-label,
+    .kw-toggle:hover .kw-toggle-arrow { color: var(--cyan); }
+    .kw-toggle:hover .kw-toggle-line  { background: var(--cyan); }
 
     .kw-section {
       max-height: 0;
@@ -241,19 +301,14 @@
       transition: max-height 0.3s ease, opacity 0.25s ease;
       opacity: 0;
     }
-
-    .kw-section.open {
-      max-height: 60px;
-      opacity: 1;
-    }
-
-    .kw-toggle-arrow.open { transform: rotate(90deg); color: var(--cyan); }
+    .kw-section.open { max-height: 60px; opacity: 1; }
+    .kw-toggle-arrow.open  { transform: rotate(90deg); color: var(--cyan); }
     .kw-toggle-label.active { color: var(--cyan); }
 
     .input-wrap {
       position: relative;
       margin-top: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 4px;
     }
 
     .input-wrap::before {
@@ -280,29 +335,12 @@
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    input#keywords::placeholder {
-      color: var(--muted);
-      font-size: 11px;
-    }
+    input#keywords::placeholder { color: var(--muted); font-size: 11px; }
 
     input#keywords:focus {
       border-color: var(--cyan);
       box-shadow: 0 0 0 2px rgba(43,210,255,0.1), 0 0 10px rgba(43,210,255,0.06);
     }
-
-    /* ── Status ── */
-    .status {
-      font-size: 10px;
-      color: var(--muted);
-      min-height: 14px;
-      text-align: center;
-      letter-spacing: 0.5px;
-      transition: color 0.3s;
-    }
-
-    .status.active  { color: var(--cyan); }
-    .status.success { color: var(--green); }
-    .status.error   { color: var(--red); }
   </style>
 </head>
 <body>
@@ -313,12 +351,26 @@
 
   <div class="body">
 
-    <!-- Neon button wrapper -->
     <div class="btn-wrap" id="btnWrap">
       <button class="extract-btn ready" id="extractBtn">EXTRACT</button>
     </div>
 
     <div class="status" id="status">Open DevTools console (F12) to see results</div>
+
+    <!-- Filter checkboxes -->
+    <div class="filter-row">
+      <input type="checkbox" id="cbJS"   checked />
+      <label class="cb-label" for="cbJS">.js</label>
+
+      <input type="checkbox" id="cbCSS"  />
+      <label class="cb-label" for="cbCSS">.css</label>
+
+      <input type="checkbox" id="cbHTML" checked />
+      <label class="cb-label" for="cbHTML">.html</label>
+
+      <input type="checkbox" id="cbSameOrigin" checked />
+      <label class="cb-label" for="cbSameOrigin">local</label>
+    </div>
 
     <!-- Collapsible keywords section -->
     <div class="kw-toggle" id="kwToggle">
