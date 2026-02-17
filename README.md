@@ -1,10 +1,10 @@
 **TLDR**
-- Dump all comments from target app
-- Control over what resources gets parsed (JS, CSS, HTML, same-origine)
-- Group results together per resource location
+- Dump all comments from target app into console output
 - Alert on detection of interesting keywords (password, secret, api-key, etc.)
+- Control over what resources get parsed (JS, CSS, HTML, same-origin)
+- Group results together per resource location
 - Group Alerts together
-- Ability to customize keyword detections
+- You can customize what keywords are flagged
 
 # Rationale
 Over many years of penetration testing web applications, I have noticed that comments are likely to contain sensitive information. 
@@ -39,5 +39,6 @@ The built-in list can be overridden with custom keywords by supplying a comma se
 # Usage
 1. Open developer tools window and navigate to "console". This is where output from the extension goes.
 2. Click the extension icon to open extension pop-up
-3. Optionally, enter a comma separated list of keywords to detect in the box labelled "Enter Keywords". Leaving this blank will use default list.
-4. Click "extract". Console window is automatically cleared before results appear.
+3. Select all scopes you want to search in (JS, CSS, HTML, Same-Origin only) 
+4. Optionally, enter a comma separated list of keywords to detect in the box labelled "Enter Keywords". Leaving this blank will use the default list.
+5. Click "extract". Console window is automatically cleared before results appear.
